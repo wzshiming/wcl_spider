@@ -24,11 +24,19 @@ export async function get_page(browser: puppeteer.Browser, uri: string, s: strin
     await page.setRequestInterception(true)
     page.on('request', interceptedRequest => {
         let method = interceptedRequest.method()
+        let uri = interceptedRequest.url()
+        let host = url.parse(uri, true).host || ""
+
         let resourceType = interceptedRequest.resourceType()
-        if (['image', 'stylesheet', 'font', "other"].includes(resourceType) || method != "GET") {
+        // console.log(host)
+        if (method != "GET" ||
+            ['image', 'stylesheet', 'font', "other"].includes(resourceType) ||
+            !['cdnjs.cloudflare.com', 'dmszsuqyoe6y6.cloudfront.net', 'cdn.jsdelivr.net', 'cdn.datatables.net',
+                'cn.warcraftlogs.com', 'www.warcraftlogs.com'].includes(host)) {
+            // console.log("abort", interceptedRequest.method(), interceptedRequest.resourceType(), uri)
             interceptedRequest.abort()
         } else {
-            // console.log(interceptedRequest.method(), interceptedRequest.resourceType(), interceptedRequest.uri())
+            // console.log("continue", interceptedRequest.method(), interceptedRequest.resourceType(), uri)
             interceptedRequest.continue()
         }
     })
@@ -150,7 +158,6 @@ export async function save_reports_fight_source(db: mongodb.Db, browser: puppete
 }
 
 export async function save_list(uri: string, ua: string) {
-    let quri = url.parse(uri, true)
     let d = await axios.get(uri, {
         headers: {
             "User-Agent": ua
