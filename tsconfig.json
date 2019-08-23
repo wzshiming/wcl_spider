@@ -3,22 +3,13 @@
     "outDir": "dist",
     "rootDir": "src",
     "module": "commonjs",
-    "lib": ["es2015"],
-    "target": "esnext",
-    "moduleResolution": "node",
+    "lib": ["es6", "dom", "es2018"],
     "strict": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": false,
-    "noFallthroughCasesInSwitch": true,
-    "removeComments": false,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": false,
     "noUnusedParameters": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "sourceMap": false,
-    "baseUrl": "src"
+    "removeComments": true,
+    "baseUrl": "src",
+    "typeRoots": ["src"]
   },
   "include": ["src"]
 }

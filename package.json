@@ -4,14 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -p .",
+    "build": "tsc",
     "start": "node ./dist/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-
     "axios": "^0.19.0",
     "cheerio": "^1.0.0-rc.3",
     "mongodb": "^3.3.0",
@@ -20,7 +19,9 @@
   "devDependencies": {
     "@types/cheerio": "^0.22.13",
     "@types/mongodb": "^3.3.0",
+    "@types/node": "^12.7.2",
     "@types/puppeteer-core": "^1.9.0",
     "typescript": "^3.5.3"
-  }
+  },
+  "private": true
 }
