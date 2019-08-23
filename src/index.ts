@@ -13,6 +13,7 @@ let terget_env = process.env["TERGET"] || 'https://cn.warcraftlogs.com/zone/repo
 async function main() {
     const mgo = await mongodb.connect(mongo_env, { useUnifiedTopology: true, useNewUrlParser: true })
     const db = await mgo.db()
+
     const browser = await puppeteer.connect({
         browserURL: await changeUrlHostToUseIp(headless_env)
     })
@@ -34,12 +35,11 @@ async function main() {
     //     handleSIGHUP: true,
     //     // dumpio: true,
     // })
-
-    await save_all(db, browser, terget_env)
-
+    for (; ;) {
+        await save_all(db, browser, terget_env)
+        console.log('step')
+    }
     // await browser.close()
-    console.log('end')
-    return
 }
 
 main()
