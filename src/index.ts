@@ -3,7 +3,7 @@ import puppeteer from 'puppeteer-core'
 import { save_all } from './saveing'
 import mongodb from 'mongodb'
 
-let mongo_env = process.env["MGONO"] || 'mongodb://127.0.0.1:27017/wcl'
+let mongo_env = process.env["MONGO"] || 'mongodb://127.0.0.1:27017/wcl'
 let headless_env = process.env["HEADLESS"] || 'http://127.0.0.1:9222'
 let terget_env = process.env["TERGET"] || 'https://cn.warcraftlogs.com/zone/reports?zone=23&boss=0&difficulty=0&class=Any&spec=Any&keystone=0&kills=0&duration=0'
 
