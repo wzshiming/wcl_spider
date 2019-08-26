@@ -17,9 +17,12 @@ export async function get_page(browser: puppeteer.Browser, uri: string, s: strin
     } else {
         page = pages[0]
     }
-    if (ua) page.setUserAgent(ua)
 
     page.setDefaultTimeout(100000)
+    if (ua) await page.setUserAgent(ua)
+    await page.setExtraHTTPHeaders({
+        dnt: '1',
+    })
     await page.setCacheEnabled(true)
     await page.setRequestInterception(true)
     page.on('request', interceptedRequest => {
