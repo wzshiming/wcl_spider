@@ -7,7 +7,7 @@ import { changeUrlHostToUseIp } from './utils'
 let mongo_env = process.env["MONGO"] || 'mongodb://127.0.0.1:27017/wcl'
 let headless_env = process.env["HEADLESS"] || 'http://127.0.0.1:9222'
 let terget_env = process.env["TERGET"] || 'https://cn.warcraftlogs.com/zone/reports?zone=23&boss=0&difficulty=0&class=Any&spec=Any&keystone=0&kills=0&duration=0'
-
+let useragent_env = process.env["USERAGENT"] || 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36'
 
 
 async function main() {
@@ -39,7 +39,7 @@ async function main() {
         //     // dumpio: true,
         // })
         for (; ;) {
-            await save_all(db, browser, terget_env)
+            await save_all(db, browser, terget_env, useragent_env)
             console.log('step')
         }
     } catch (error) {

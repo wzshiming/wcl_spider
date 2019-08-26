@@ -5,7 +5,7 @@ import axios from 'axios'
 import cheerio from 'cheerio'
 import url from 'url'
 
-export async function get_page(browser: puppeteer.Browser, uri: string, s: string[] = [], sel: string = "body") {
+export async function get_page(browser: puppeteer.Browser, uri: string, s: string[] = [], sel: string = "body", ua: string = "") {
     if (uri == "" || uri == "#") {
         return ""
     }
@@ -17,6 +17,7 @@ export async function get_page(browser: puppeteer.Browser, uri: string, s: strin
     } else {
         page = pages[0]
     }
+    if (ua) page.setUserAgent(ua)
 
     page.setDefaultTimeout(100000)
     await page.setCacheEnabled(true)
@@ -56,7 +57,7 @@ export async function get_page(browser: puppeteer.Browser, uri: string, s: strin
     return content
 }
 
-export async function save_reports(db: mongodb.Db, browser: puppeteer.Browser, uri: string): Promise<WclItems> {
+export async function save_reports(db: mongodb.Db, browser: puppeteer.Browser, uri: string, ua: string): Promise<WclItems> {
     let coll = db.collection("reports")
     let result = await coll.findOne({
         _id: uri,
@@ -75,7 +76,7 @@ export async function save_reports(db: mongodb.Db, browser: puppeteer.Browser, u
     })
 `
     console.log("reports", uri)
-    let data = await get_page(browser, uri, [s])
+    let data = await get_page(browser, uri, [s], ua)
     if (!data) {
         return result
     }
@@ -91,7 +92,7 @@ export async function save_reports(db: mongodb.Db, browser: puppeteer.Browser, u
     return result
 }
 
-export async function save_reports_fight(db: mongodb.Db, browser: puppeteer.Browser, uri: string): Promise<WclTables> {
+export async function save_reports_fight(db: mongodb.Db, browser: puppeteer.Browser, uri: string, ua: string): Promise<WclTables> {
     let coll = db.collection("reports_fight")
     let result = await coll.findOne({
         _id: uri,
@@ -116,7 +117,7 @@ export async function save_reports_fight(db: mongodb.Db, browser: puppeteer.Brow
     `
 
     console.log("reports_fight", uri)
-    let data = await get_page(browser, uri, [s])
+    let data = await get_page(browser, uri, [s], ua)
     if (!data) {
         return result
     }
@@ -132,7 +133,7 @@ export async function save_reports_fight(db: mongodb.Db, browser: puppeteer.Brow
     return result
 }
 
-export async function save_reports_fight_source(db: mongodb.Db, browser: puppeteer.Browser, uri: string): Promise<WclTables> {
+export async function save_reports_fight_source(db: mongodb.Db, browser: puppeteer.Browser, uri: string, ua: string): Promise<WclTables> {
     let coll = db.collection("reports_fight_source")
     let result = await coll.findOne({
         _id: uri,
@@ -142,7 +143,7 @@ export async function save_reports_fight_source(db: mongodb.Db, browser: puppete
     }
 
     console.log("reports_fight_source", uri)
-    let data = await get_page(browser, uri)
+    let data = await get_page(browser, uri, [], ua)
     if (!data) {
         return result
     }
@@ -178,29 +179,29 @@ export async function save_list(uri: string, ua: string) {
 }
 
 
-export async function save_all(db: mongodb.Db, browser: puppeteer.Browser, uri: string): Promise<void> {
-    let ua = await browser.userAgent()
+export async function save_all(db: mongodb.Db, browser: puppeteer.Browser, uri: string, ua: string = ""): Promise<void> {
+    ua = ua || await browser.userAgent()
     let pending = await save_list(uri, ua)
     for (let n in pending.items) {
         let u = pending.items[n]
-        let items = await save_reports(db, browser, u)
+        let items = await save_reports(db, browser, u, ua)
         for (let k in items.items) {
             let item = items.items[k]
-            let data = await save_reports_fight(db, browser, item)
+            let data = await save_reports_fight(db, browser, item, ua)
             for (let i in data.composition) {
                 let x = data.composition[i]
                 x = x.slice(1)
                 for (let j in x) {
                     let y = x[j]
                     if (y.children && y.children.length >= 2 && y.children[1].href) {
-                        await save_reports_fight_source(db, browser, y.children[1].href)
+                        await save_reports_fight_source(db, browser, y.children[1].href, ua)
                     }
                 }
             }
         }
     }
     if (pending.next) {
-        return save_all(db, browser, pending.next)
+        return save_all(db, browser, pending.next, ua)
     }
     return
 }
