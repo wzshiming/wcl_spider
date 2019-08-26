@@ -32,10 +32,10 @@ export async function get_page(browser: puppeteer.Browser, uri: string, s: strin
             ['image', 'stylesheet', 'font', "other"].includes(resourceType) ||
             !['cdnjs.cloudflare.com', 'dmszsuqyoe6y6.cloudfront.net', 'cdn.jsdelivr.net', 'cdn.datatables.net',
                 'cn.warcraftlogs.com', 'www.warcraftlogs.com'].includes(host)) {
-            console.log(interceptedRequest.method(), uri)
             // console.log("abort", interceptedRequest.method(), interceptedRequest.resourceType(), uri)
             interceptedRequest.abort()
         } else {
+            console.log(interceptedRequest.method(), uri)
             // console.log("continue", interceptedRequest.method(), interceptedRequest.resourceType(), uri)
             interceptedRequest.continue()
         }
