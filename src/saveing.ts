@@ -5,7 +5,7 @@ import axios from 'axios'
 import cheerio from 'cheerio'
 import url from 'url'
 
-export async function get_page(browser: puppeteer.Browser, uri: string, s: string[] = [], sel: string = "body", ua: string = "") {
+export async function get_page(browser: puppeteer.Browser, uri: string, s: string[], sel: string, ua: string = '') {
     if (uri == "" || uri == "#") {
         return ""
     }
@@ -76,7 +76,7 @@ export async function save_reports(db: mongodb.Db, browser: puppeteer.Browser, u
     })
 `
     console.log("reports", uri)
-    let data = await get_page(browser, uri, [s], ua)
+    let data = await get_page(browser, uri, [s], 'body', ua)
     if (!data) {
         return result
     }
@@ -117,7 +117,7 @@ export async function save_reports_fight(db: mongodb.Db, browser: puppeteer.Brow
     `
 
     console.log("reports_fight", uri)
-    let data = await get_page(browser, uri, [s], ua)
+    let data = await get_page(browser, uri, [s], 'body', ua)
     if (!data) {
         return result
     }
@@ -143,7 +143,7 @@ export async function save_reports_fight_source(db: mongodb.Db, browser: puppete
     }
 
     console.log("reports_fight_source", uri)
-    let data = await get_page(browser, uri, [], ua)
+    let data = await get_page(browser, uri, [], 'body', ua)
     if (!data) {
         return result
     }
