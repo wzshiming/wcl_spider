@@ -11,35 +11,43 @@ let terget_env = process.env["TERGET"] || 'https://cn.warcraftlogs.com/zone/repo
 
 
 async function main() {
-    const mgo = await mongodb.connect(mongo_env, { useUnifiedTopology: true, useNewUrlParser: true })
-    const db = await mgo.db()
+    let browser
+    let mgo
+    try {
+        mgo = await mongodb.connect(mongo_env, { useUnifiedTopology: true, useNewUrlParser: true })
+        let db = mgo.db()
 
-    const browser = await puppeteer.connect({
-        browserURL: await changeUrlHostToUseIp(headless_env)
-    })
-    // const browser = await puppeteer.launch({
-    //     // timeout: 100000,
-    //     headless: true,
-    //     ignoreHTTPSErrors: true,
-    //     args: [
-    //         '--disable-gpu',
-    //         '--disable-dev-shm-usage',
-    //         '--disable-setuid-sandbox',
-    //         '--no-first-run',
-    //         '--no-sandbox',
-    //         '--no-zygote',
-    //         '--single-process',
-    //     ],
-    //     handleSIGINT: true,
-    //     handleSIGTERM: true,
-    //     handleSIGHUP: true,
-    //     // dumpio: true,
-    // })
-    for (; ;) {
-        await save_all(db, browser, terget_env)
-        console.log('step')
+        browser = await puppeteer.connect({
+            browserURL: await changeUrlHostToUseIp(headless_env)
+        })
+        // let browser = await puppeteer.launch({
+        //     // timeout: 100000,
+        //     headless: true,
+        //     ignoreHTTPSErrors: true,
+        //     args: [
+        //         '--disable-gpu',
+        //         '--disable-dev-shm-usage',
+        //         '--disable-setuid-sandbox',
+        //         '--no-first-run',
+        //         '--no-sandbox',
+        //         '--no-zygote',
+        //         '--single-process',
+        //     ],
+        //     handleSIGINT: true,
+        //     handleSIGTERM: true,
+        //     handleSIGHUP: true,
+        //     // dumpio: true,
+        // })
+        for (; ;) {
+            await save_all(db, browser, terget_env)
+            console.log('step')
+        }
+    } catch (error) {
+        console.log(error)
+    } finally {
+        if (browser) browser.disconnect()
+        if (mgo) await mgo.close()
     }
-    // await browser.close()
 }
 
 main()

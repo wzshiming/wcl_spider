@@ -6,7 +6,6 @@ import cheerio from 'cheerio'
 import url from 'url'
 
 export async function get_page(browser: puppeteer.Browser, uri: string, s: string[] = [], sel: string = "body") {
-    console.log("open", uri)
     if (uri == "" || uri == "#") {
         return ""
     }
@@ -33,6 +32,7 @@ export async function get_page(browser: puppeteer.Browser, uri: string, s: strin
             ['image', 'stylesheet', 'font', "other"].includes(resourceType) ||
             !['cdnjs.cloudflare.com', 'dmszsuqyoe6y6.cloudfront.net', 'cdn.jsdelivr.net', 'cdn.datatables.net',
                 'cn.warcraftlogs.com', 'www.warcraftlogs.com'].includes(host)) {
+            console.log(interceptedRequest.method(), uri)
             // console.log("abort", interceptedRequest.method(), interceptedRequest.resourceType(), uri)
             interceptedRequest.abort()
         } else {
@@ -50,11 +50,10 @@ export async function get_page(browser: puppeteer.Browser, uri: string, s: strin
     }
     await page.waitFor(10)
 
-    console.log("close", uri)
     let content = await page.$eval(sel, el => el.innerHTML)
 
     await page.close()
-    return content.toString()
+    return content
 }
 
 export async function save_reports(db: mongodb.Db, browser: puppeteer.Browser, uri: string): Promise<WclItems> {
@@ -75,12 +74,12 @@ export async function save_reports(db: mongodb.Db, browser: puppeteer.Browser, u
         }
     })
 `
+    console.log("reports", uri)
     let data = await get_page(browser, uri, [s])
     if (!data) {
         return result
     }
     result = get_reports(data)
-    console.log("reports", uri)
     await coll.updateOne(
         {
             _id: uri
@@ -115,12 +114,13 @@ export async function save_reports_fight(db: mongodb.Db, browser: puppeteer.Brow
         }
     })
     `
+
+    console.log("reports_fight", uri)
     let data = await get_page(browser, uri, [s])
     if (!data) {
         return result
     }
     result = get_reports_fight(data)
-    console.log("reports_fight", uri)
     await coll.updateOne(
         {
             _id: uri
@@ -140,12 +140,13 @@ export async function save_reports_fight_source(db: mongodb.Db, browser: puppete
     if (result) {
         return result
     }
+
+    console.log("reports_fight_source", uri)
     let data = await get_page(browser, uri)
     if (!data) {
         return result
     }
     result = get_reports_fight_source(data)
-    console.log("reports_fight_source", uri)
     await coll.updateOne(
         {
             _id: uri
