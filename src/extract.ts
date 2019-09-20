@@ -65,7 +65,7 @@ export function get_struct_table_data($: CheerioStatic, sel: string): Obj[][] {
     let results: Obj[][] = []
     tr.each(
         function (_, el0) {
-            let item: Obj[] = $(el0).children().filter("td").map(
+            let item: Obj[] = $(el0).children().not("script").map(
                 function (_, el1) {
                     return el1.children.map(html2json).filter(x => x)
                 }
