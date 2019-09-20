@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer-core'
-import { WclItems, WclTables, get_reports, get_reports_fight, get_reports_fight_source } from './extract'
+import { WclItems, WclTables, get_rankings, get_reports, get_reports_fight, get_reports_fight_source, get_id_from_uri } from './extract'
 import mongodb from 'mongodb'
 import axios from 'axios'
 import cheerio from 'cheerio'
@@ -50,9 +50,10 @@ export async function get_page(browser: puppeteer.Browser, uri: string, s: strin
     })
 
     for (let i in s) {
+        await page.waitFor(10)
         await page.evaluate(s[i])
     }
-    await page.waitFor(10)
+    await page.waitFor(100)
 
     let content = await page.$eval(sel, el => el.innerHTML)
 
@@ -88,10 +89,10 @@ export async function save_reports(db: mongodb.Db, browser: puppeteer.Browser, u
         {
             _id: uri
         }, {
-            $set: { update: new Date(), ...result }
-        }, {
-            upsert: true
-        })
+        $set: { update: new Date(), ...result }
+    }, {
+        upsert: true
+    })
     return result
 }
 
@@ -129,10 +130,10 @@ export async function save_reports_fight(db: mongodb.Db, browser: puppeteer.Brow
         {
             _id: uri
         }, {
-            $set: { update: new Date(), ...result }
-        }, {
-            upsert: true
-        })
+        $set: { update: new Date(), ...result }
+    }, {
+        upsert: true
+    })
     return result
 }
 
@@ -155,10 +156,10 @@ export async function save_reports_fight_source(db: mongodb.Db, browser: puppete
         {
             _id: uri
         }, {
-            $set: { update: new Date(), ...result }
-        }, {
-            upsert: true
-        })
+        $set: { update: new Date(), ...result }
+    }, {
+        upsert: true
+    })
     return result
 }
 
@@ -181,30 +182,55 @@ export async function save_list(uri: string, ua: string) {
     }
 }
 
+export async function save_rankings(browser: puppeteer.Browser, uri: string, ua: string) {
+    let result
+    let data = await get_page(browser, uri, [], 'body', ua)
+    if (!data) {
+        return result
+    }
+    result = get_rankings(data)
+    return result.list.slice(1).map(function (x) {
+        let item = x[1]
+        if (!item || !item.children) return null
+        let report = item.children[0]
+        if (!report || !report.children) return null
+        report = report.children[1]
+        if (!report || !report.href || !report.children) return null
+        let id = get_id_from_uri(report.href)
+        let name = report.children[0].data || ""
+        let uri_ = url.resolve(uri, "/reports/" + id + "#fight=1&type=summary")
+        return {
+            id,
+            name,
+            uri: uri_,
+        }
+    }).filter(x => x && x.id)
+}
 
-export async function save_all(db: mongodb.Db, browser: puppeteer.Browser, uri: string, ua: string = ""): Promise<void> {
+export async function save_all(db: mongodb.Db, browser: puppeteer.Browser, uri: string, ua: string = "") {
     ua = ua || await browser.userAgent()
-    let pending = await save_list(uri, ua)
-    for (let n in pending.items) {
-        let u = pending.items[n]
-        let items = await save_reports(db, browser, u, ua)
-        for (let k in items.items) {
-            let item = items.items[k]
-            let data = await save_reports_fight(db, browser, item, ua)
-            for (let i in data.composition) {
-                let x = data.composition[i]
-                x = x.slice(1)
-                for (let j in x) {
-                    let y = x[j]
-                    if (y.children && y.children.length >= 2 && y.children[1].href) {
-                        await save_reports_fight_source(db, browser, y.children[1].href, ua)
-                    }
+    let pending
+    pending = await save_rankings(browser, uri, ua)
+    if (!pending) return
+
+    outer:
+    for (let n in pending) {
+        let item = pending[n]
+        if (!item) continue
+        let data = await save_reports_fight(db, browser, item.uri, ua)
+        for (let i in data.composition) {
+            let x = data.composition[i]
+            x = x.slice(1)
+            for (let j in x) {
+                let y = x[j]
+                if (y.children && y.children.length >= 2 &&
+                    y.children[1].href &&
+                    y.children[1].children && y.children[1].children[0] && y.children[1].children[0].data == item.name) {
+                    await save_reports_fight_source(db, browser, y.children[1].href, ua)
+                    continue outer
                 }
             }
         }
-    }
-    if (pending.next) {
-        return save_all(db, browser, pending.next, ua)
     }
     return
 }

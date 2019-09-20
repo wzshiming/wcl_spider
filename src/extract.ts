@@ -1,6 +1,6 @@
 import cheerio from 'cheerio'
 
-interface Obj {
+export interface Obj {
     type: string
     data?: string
     href?: string
@@ -65,7 +65,7 @@ export function get_struct_table_data($: CheerioStatic, sel: string): Obj[][] {
     let results: Obj[][] = []
     tr.each(
         function (_, el0) {
-            let item: Obj[] = $(el0).children().map(
+            let item: Obj[] = $(el0).children().filter("td").map(
                 function (_, el1) {
                     return el1.children.map(html2json).filter(x => x)
                 }
@@ -142,4 +142,24 @@ export function get_reports_fight_source(content: string) {
         guild,
         owner,
     }
+}
+
+
+export function get_rankings(content: string) {
+    let $ = cheerio.load(content)
+
+    let list = get_struct_table_data($, "#DataTables_Table_0")
+
+    return {
+        list,
+    }
+}
+
+export function get_id_from_uri(uri: string) {
+    let reg = /reports\/([\w]+)/
+    let result = reg.exec(uri)
+    if (result && result[1]) {
+        return result[1]
+    }
+    return ""
 }
